@@ -1,16 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Peer } from 'peerjs'
+import { Peer, type DataConnection } from 'peerjs'
 import { useEventListener } from '@vueuse/core'
 
-const myPeerId = ref('')
-const targetPeerId = ref('')
-const connectionStatus = ref('disconnected') // disconnected, connecting, connected
-const isSyncing = ref(false)
-const logs = ref([])
-const activeConnection = ref(null)
+const myPeerId = ref<string>('')
+const targetPeerId = ref<string>('')
+const connectionStatus = ref<'disconnected' | 'connecting' | 'connected'>('disconnected')
+const isSyncing = ref<boolean>(false)
 
-let peer = null
+interface LogItem {
+  time: string
+  type: string
+  msg: string
+}
+const logs = ref<LogItem[]>([])
+const activeConnection = ref<DataConnection | null>(null)
+
+let peer: Peer | null = null
 
 const initPeer = () => {
   peer = new Peer({
@@ -23,17 +29,17 @@ const initPeer = () => {
     }
   })
 
-  peer.on('open', (id) => {
+  peer.on('open', (id: string) => {
     myPeerId.value = id
     addLog('System', `Ready!`)
   })
 
-  peer.on('connection', (conn) => {
+  peer.on('connection', (conn: DataConnection) => {
     // When someone else connects to us
     setupConnection(conn)
   })
 
-  peer.on('error', (err) => {
+  peer.on('error', (err: any) => {
     console.error(err)
     addLog('Error', err.type)
     if (err.type !== 'peer-unavailable') {
@@ -45,7 +51,7 @@ const initPeer = () => {
   })
 }
 
-const setupConnection = (conn) => {
+const setupConnection = (conn: DataConnection) => {
   activeConnection.value = conn
   connectionStatus.value = 'connecting'
 
@@ -54,7 +60,7 @@ const setupConnection = (conn) => {
     addLog('System', 'Connected to peer!')
   })
 
-  conn.on('data', (data) => {
+  conn.on('data', (data: any) => {
     handleIncomingData(data)
   })
 
@@ -64,7 +70,7 @@ const setupConnection = (conn) => {
     addLog('System', 'Connection closed.')
   })
 
-  conn.on('error', (err) => {
+  conn.on('error', (err: any) => {
     addLog('Error', 'Connection logic error')
   })
 }
@@ -82,7 +88,7 @@ const disconnect = () => {
   }
 }
 
-const addLog = (type, msg) => {
+const addLog = (type: string, msg: string) => {
   logs.value.unshift({
     time: new Date().toLocaleTimeString(),
     type: type.toLowerCase(),
@@ -168,7 +174,7 @@ const pullClipboardAndSend = async () => {
   }
 }
 
-const handleIncomingData = async (data) => {
+const handleIncomingData = async (data: any) => {
   try {
     isSyncing.value = true
     if (data.isText) {
