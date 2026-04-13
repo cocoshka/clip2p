@@ -22,9 +22,9 @@ const initPeer = () => {
   peer = new Peer({
     config: {
       iceServers: [
+        { urls: 'stun:stun.nextcloud.com:443' },
         { urls: 'stun:stunserver2025.stunprotocol.org' },
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
       ]
     }
   })
